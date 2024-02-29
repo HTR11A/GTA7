@@ -50,3 +50,4 @@ def draw_timeline(selector_position, elapsed_time, total_duration, screen):
 
     pygame.draw.rect(screen, (255, 255, 255), (timeline_x, timeline_y, timeline_width, timeline_height))  # Таймлайн
     pygame.draw.rect(screen, (255, 0, 0), (selector_position, timeline_y, selector_width, selector_height))  # Ползунок
+
