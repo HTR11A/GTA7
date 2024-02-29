@@ -2,28 +2,42 @@ import pygame
 import time
 
 
-def timer(elapsed_time, array):
+def timer(elapsed_time, array, mode=0):
     output = []
-    for e in array:
-        if e['Click_time'] - e['Prep_start_time'] <= elapsed_time <= e['Click_time'] + 0.05:
-            if e['Click_time'] - e['Prep_start_time'] >= 0:
-                output.append(e)
-            else:
-                e['Prep_start_time'] = e['Click_time']
-                output.append(e)
+    if mode == 0:
+        for e in array:
+            if e['Click_time'] - e['Prep_start_time'] <= elapsed_time <= e['Click_time']:
+                if e['Click_time'] - e['Prep_start_time'] >= 0:
+                    output.append(e)
+                else:
+                    e['Prep_start_time'] = e['Click_time']
+                    output.append(e)
+    else:
+        for e in array:
+            if e['Click_time'] - e['Prep_start_time'] <= elapsed_time <= e['Click_time']:
+                if e['Click_time'] - e['Prep_start_time'] >= 0:
+                    output.append(e)
+                else:
+                    e['Prep_start_time'] = e['Click_time']
+                    output.append(e)
+            elif e['Click_time'] <= elapsed_time <= e['Click_time'] + 0.5 and e['Radius'] >= 0:
+                b = {'Color': (255, 255, 255), 'X_pos': e['X_pos'],
+                     'Prep_start_time': e['Prep_start_time'], 'Click_time': e['Click_time'],
+                     'Radius': e['Radius'] - round((elapsed_time - e['Click_time']) * 13 * e['Radius'], 2)}
+                output.append(b)
     return output
 
 
 def edit(array, pos, click_time):
     array.append({'Color': (255, 255, 255), 'X_pos': pos,
-                  'Prep_start_time': 0.5, 'Click_time': click_time})
+                  'Prep_start_time': 0.5, 'Click_time': click_time, 'Radius': 20})
     print(array)
     return array
 
 
 def draw(array, screen):
     for circle in array:
-        pygame.draw.circle(screen, circle['Color'], circle['X_pos'], 20)
+        pygame.draw.circle(screen, circle['Color'], circle['X_pos'], circle['Radius'])
 
 
 def play_pause(is_playing, paused_time, start_time):
@@ -51,3 +65,6 @@ def draw_timeline(selector_position, elapsed_time, total_duration, screen):
     pygame.draw.rect(screen, (255, 255, 255), (timeline_x, timeline_y, timeline_width, timeline_height))  # Таймлайн
     pygame.draw.rect(screen, (255, 0, 0), (selector_position, timeline_y, selector_width, selector_height))  # Ползунок
 
+
+def pause_menu(screen):
+    pygame.draw.rect(screen, (255, 255, 255), (50, 50, 700, 300))  # Таймлайн
