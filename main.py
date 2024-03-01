@@ -1,8 +1,7 @@
 import pygame
 import time
-from editor import draw, timer, edit, draw_timeline, play_pause, pause_menu
+from editor import draw, timer, edit, draw_timeline, play_pause, pause_menu, load_audio, alter_playback_speed
 from menu import Button
-from xtest import load_audio, alter_playback_speed
 from game import click_circle, draw_red_circles, color_change
 
 
