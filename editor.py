@@ -1,5 +1,9 @@
 import pygame
 import time
+import librosa
+import soundfile as sf
+import tempfile
+import os
 
 
 def timer(elapsed_time, array, mode=0):
@@ -69,3 +73,23 @@ def draw_timeline(selector_position, elapsed_time, total_duration, screen):
 
 def pause_menu(screen):
     pygame.draw.rect(screen, (255, 255, 255), (50, 50, 700, 300))  # Таймлайн
+
+
+def load_audio(inp):
+    audio, sr = librosa.load(inp, sr=None)
+    stretch_factor = 1 / 1.5
+    audio_fast = librosa.effects.time_stretch(audio, rate=stretch_factor)
+    temp_fd, temp_path = tempfile.mkstemp(suffix='.wav')
+    sf.write(temp_path, audio_fast, sr)
+    os.close(temp_fd)
+
+    pygame.mixer.init()
+    pygame.mixer.music.load(inp)
+    return round(librosa.get_duration(path=inp)), temp_path, round(librosa.get_duration(path=temp_path))
+
+
+def alter_playback_speed(og, slowed, playback_speed):
+    if playback_speed == 1:
+        pygame.mixer.music.load(og)
+    else:
+        pygame.mixer.music.load(slowed)
