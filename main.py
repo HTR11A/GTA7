@@ -3,6 +3,7 @@ import time
 from editor import draw, timer, edit, draw_timeline, play_pause, pause_menu
 from menu import Button
 from xtest import load_audio, alter_playback_speed
+from game import click_circle, draw_red_circles, color_change
 
 
 def menu(scr):
@@ -42,7 +43,70 @@ def menu(scr):
 
 
 def game(scr):
-    pass
+    global circles
+    circles_game = circles.copy()
+    simultaneous_circles = []
+    unpressed_circles = []
+    total_duration = 40
+    is_playing = False
+    game_start_time = 0
+    editor_is_paused = False
+    running = True
+    img = pygame.image.load('image/Morgenshtern.png')
+    img = pygame.transform.scale(img, (200, 100))
+    menu_btn = Button('Quit to menu', img, 400, 250, scr)
+    start_btn = Button('START', img, 400, 250, scr)
+    n = 0
+
+    while running:
+        while running:
+            scr.fill((0, 0, 0))
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        editor_is_paused = not editor_is_paused
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if start_btn.checkforinput(event.pos) and not editor_is_paused and not is_playing:
+                        game_start_time = time.time() - game_start_time
+                        is_playing = True
+                        print(1)
+                    if len(simultaneous_circles) > 0 and not editor_is_paused and is_playing:
+                        simultaneous_circles, unpressed_circles = click_circle(event.pos, simultaneous_circles, unpressed_circles)
+                    if menu_btn.checkforinput(event.pos) and editor_is_paused:
+                        menu(scr)
+                        print(2)
+                elif event.type == pygame.MOUSEMOTION:
+
+                    menu_btn.hover(event.pos)
+                    start_btn.hover(event.pos)
+            if not is_playing:
+                start_btn.update()
+            if is_playing:
+                elapsed_time = time.time() - game_start_time
+                if elapsed_time > total_duration:
+                    elapsed_time = total_duration
+                    # нужно добавить экран окончания уровня
+                cur_circles = timer(elapsed_time, circles_game, mode=0)
+                if len(cur_circles) > 0 and elapsed_time < cur_circles[0]['Prep_start_time'] + cur_circles[0]['Click_time'] and cur_circles not in simultaneous_circles:
+                    simultaneous_circles.append(cur_circles)
+                for i in simultaneous_circles:
+                    if elapsed_time < i[0]['Prep_start_time'] + i[0]['Click_time']:
+                        draw(i, screen)
+                    else:
+                        n += 1
+                if n > 0:
+                    simultaneous_circles, unpressed_circles, n = color_change(simultaneous_circles, unpressed_circles, n)
+                for i in unpressed_circles:
+                    if elapsed_time < i[0]['Prep_start_time'] + i[0]['Click_time']:
+                        draw_red_circles(i, screen)
+
+            if editor_is_paused:
+                pause_menu(scr)
+                menu_btn.update()
+            pygame.display.flip()
+    pygame.quit()
 
 
 def editor(scr):
