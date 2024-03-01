@@ -2,7 +2,7 @@ import pygame
 import time
 from editor import draw, timer, edit, draw_timeline, play_pause, pause_menu
 from menu import Button
-from game import over, click_circle
+from game import click_circle, draw_red_circles, color_change
 
 
 def menu(scr):
@@ -43,9 +43,10 @@ def menu(scr):
 
 def game(scr):
     global circles
+    circles_game = circles.copy()
     simultaneous_circles = []
+    unpressed_circles = []
     total_duration = 40
-    duration_of_appearance = 3
     is_playing = False
     game_start_time = 0
     editor_is_paused = False
@@ -54,6 +55,7 @@ def game(scr):
     img = pygame.transform.scale(img, (200, 100))
     menu_btn = Button('Quit to menu', img, 400, 250, scr)
     start_btn = Button('START', img, 400, 250, scr)
+    n = 0
 
     while running:
         while running:
@@ -70,7 +72,7 @@ def game(scr):
                         is_playing = True
                         print(1)
                     if len(simultaneous_circles) > 0 and not editor_is_paused and is_playing:
-                        simultaneous_circles = click_circle(event.pos, simultaneous_circles)
+                        simultaneous_circles, unpressed_circles = click_circle(event.pos, simultaneous_circles, unpressed_circles)
                     if menu_btn.checkforinput(event.pos) and editor_is_paused:
                         menu(scr)
                         print(2)
@@ -85,13 +87,19 @@ def game(scr):
                 if elapsed_time > total_duration:
                     elapsed_time = total_duration
                     # нужно добавить экран окончания уровня
-                cur_circles = timer(elapsed_time, circles, mode=0)
-                if len(cur_circles) > 0 and elapsed_time < duration_of_appearance + cur_circles[0]['Click_time'] and cur_circles not in simultaneous_circles:
+                cur_circles = timer(elapsed_time, circles_game, mode=0)
+                if len(cur_circles) > 0 and elapsed_time < cur_circles[0]['Prep_start_time'] + cur_circles[0]['Click_time'] and cur_circles not in simultaneous_circles:
                     simultaneous_circles.append(cur_circles)
                 for i in simultaneous_circles:
-                    if elapsed_time < duration_of_appearance + i[0]['Click_time']:
+                    if elapsed_time < i[0]['Prep_start_time'] + i[0]['Click_time']:
                         draw(i, screen)
-                over(simultaneous_circles, elapsed_time, duration_of_appearance)
+                    else:
+                        n += 1
+                if n > 0:
+                    simultaneous_circles, unpressed_circles, n = color_change(simultaneous_circles, unpressed_circles, n)
+                for i in unpressed_circles:
+                    if elapsed_time < i[0]['Prep_start_time'] + i[0]['Click_time']:
+                        draw_red_circles(i, screen)
 
             if editor_is_paused:
                 pause_menu(scr)
