@@ -14,7 +14,7 @@ def timer(elapsed_time, array, mode=0):
                     output.append(e)
     else:
         for e in array:
-            if e['Click_time'] - e['Prep_start_time'] <= elapsed_time <= e['Click_time']:
+            if e['Click_time'] <= elapsed_time <= e['Click_time']:
                 if e['Click_time'] - e['Prep_start_time'] >= 0:
                     output.append(e)
                 else:
@@ -31,7 +31,6 @@ def timer(elapsed_time, array, mode=0):
 def edit(array, pos, click_time):
     array.append({'Color': (255, 255, 255), 'X_pos': pos,
                   'Prep_start_time': 0.5, 'Click_time': click_time, 'Radius': 20})
-    print(array)
     return array
 
 
@@ -40,12 +39,14 @@ def draw(array, screen):
         pygame.draw.circle(screen, circle['Color'], circle['X_pos'], circle['Radius'])
 
 
-def play_pause(is_playing, paused_time, start_time):
+def play_pause(is_playing, paused_time, start_time, playback_speed):
     if not is_playing:
         is_playing = True
         start_time = time.time() - paused_time
+        pygame.mixer.music.play(start=(time.time() - start_time) * playback_speed)
     else:
         is_playing = False
+        pygame.mixer.music.pause()
         paused_time = time.time() - start_time
     return is_playing, paused_time, start_time
 

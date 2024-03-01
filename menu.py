@@ -27,3 +27,7 @@ class Button:
             self.text_obj = self.font.render(self.text_str, True, "green")
         else:
             self.text_obj = self.font.render(self.text_str, True, "white")
+
+    def changetext(self, text):
+        self.text_str = text
+        self.text_obj = self.font.render(self.text_str, True, (255, 255, 255))
