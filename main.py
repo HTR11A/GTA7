@@ -2,6 +2,7 @@ import pygame
 import time
 from editor import draw, timer, edit, draw_timeline, play_pause, pause_menu
 from menu import Button
+from game import over, click_circle
 
 
 def menu(scr):
@@ -41,11 +42,66 @@ def menu(scr):
 
 
 def game(scr):
-    pass
+    global circles
+    simultaneous_circles = []
+    total_duration = 40
+    duration_of_appearance = 3
+    is_playing = False
+    game_start_time = 0
+    editor_is_paused = False
+    running = True
+    img = pygame.image.load('image/Morgenshtern.png')
+    img = pygame.transform.scale(img, (200, 100))
+    menu_btn = Button('Quit to menu', img, 400, 250, scr)
+    start_btn = Button('START', img, 400, 250, scr)
+
+    while running:
+        while running:
+            scr.fill((0, 0, 0))
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        editor_is_paused = not editor_is_paused
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if start_btn.checkforinput(event.pos) and not editor_is_paused and not is_playing:
+                        game_start_time = time.time() - game_start_time
+                        is_playing = True
+                        print(1)
+                    if len(simultaneous_circles) > 0 and not editor_is_paused and is_playing:
+                        simultaneous_circles = click_circle(event.pos, simultaneous_circles)
+                    if menu_btn.checkforinput(event.pos) and editor_is_paused:
+                        menu(scr)
+                        print(2)
+                elif event.type == pygame.MOUSEMOTION:
+
+                    menu_btn.hover(event.pos)
+                    start_btn.hover(event.pos)
+            if not is_playing:
+                start_btn.update()
+            if is_playing:
+                elapsed_time = time.time() - game_start_time
+                if elapsed_time > total_duration:
+                    elapsed_time = total_duration
+                    # нужно добавить экран окончания уровня
+                cur_circles = timer(elapsed_time, circles, mode=0)
+                if len(cur_circles) > 0 and elapsed_time < duration_of_appearance + cur_circles[0]['Click_time'] and cur_circles not in simultaneous_circles:
+                    simultaneous_circles.append(cur_circles)
+                for i in simultaneous_circles:
+                    if elapsed_time < duration_of_appearance + i[0]['Click_time']:
+                        draw(i, screen)
+                over(simultaneous_circles, elapsed_time, duration_of_appearance)
+
+            if editor_is_paused:
+                pause_menu(scr)
+                menu_btn.update()
+            pygame.display.flip()
+    pygame.quit()
 
 
 def editor(scr):
-    circles = []
+    global circles
     total_duration = 40
     is_playing = False
     is_dragging = False
@@ -123,6 +179,7 @@ def editor(scr):
         pygame.display.flip()
     pygame.quit()
 
+circles = []
 
 if __name__ == '__main__':
     pygame.init()
@@ -130,3 +187,5 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
 
     menu(screen)
+
+# lkdlkdlkdld
