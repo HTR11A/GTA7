@@ -5,16 +5,31 @@ from menu import Button
 from game import click_circle, draw_red_circles, color_change
 
 
+def get_font(size): # Returns Press-Start-2P in the desired size
+    return pygame.font.Font("fonts/font.ttf", size)
 def menu(scr):
-    img = pygame.image.load('image/Morgenshtern.png')
-    img = pygame.transform.scale(img, (200, 100))
-    resume_btn = Button('Continue', img, 200, 10, scr)
-    load_level_btn = Button('Load level', img, 200, 110, scr)
-    editor_btn = Button('Create new level', img, 200, 210, scr)
-    quit_btn = Button('Quit', img, 200, 310, scr)
     running = True
     while running:
-        scr.fill((0, 0, 0))
+        scr.blit(BG, (0, 0))
+
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
+
+        MENU_TEXT = get_font(100).render("MAIN MENU", True, "#b68f40")
+        MENU_RECT = MENU_TEXT.get_rect(center=(640, 100))
+
+        PLAY_BUTTON = Button(image=pygame.image.load("image/Play Rect.png"), pos=(640, 250),
+                             text_input="PLAY", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+        OPTIONS_BUTTON = Button(image=pygame.image.load("image/Options Rect.png"), pos=(640, 400),
+                                text_input="OPTIONS", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+        QUIT_BUTTON = Button(image=pygame.image.load("image/Quit Rect.png"), pos=(640, 550),
+                             text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+
+        for button in [PLAY_BUTTON, OPTIONS_BUTTON, QUIT_BUTTON]:
+            button.changeColor(MENU_MOUSE_POS)
+            button.update(scr)
+
+        scr.blit(MENU_TEXT, MENU_RECT)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -27,15 +42,7 @@ def menu(scr):
                     editor(scr)
                 if quit_btn.checkforinput(event.pos):
                     pygame.quit()
-            elif event.type == pygame.MOUSEMOTION:
-                resume_btn.hover(event.pos)
-                load_level_btn.hover(event.pos)
-                editor_btn.hover(event.pos)
-                quit_btn.hover(event.pos)
-        resume_btn.update()
-        load_level_btn.update()
-        editor_btn.update()
-        quit_btn.update()
+
         pygame.display.flip()
 
     pygame.quit()
@@ -109,7 +116,7 @@ def game(scr):
 
 
 def editor(scr):
-    circles = []
+    global circles
     audio_file = "MACAN-ASPHALT-8.mp3"
     total_duration, temp, dur_slow = load_audio(audio_file)
     print(total_duration, temp)
@@ -201,9 +208,11 @@ def editor(scr):
     pygame.quit()
 
 
+circles = []
 if __name__ == '__main__':
     pygame.init()
-    size = width, height = 800, 400
+    size = width, height = 1280, 720
     screen = pygame.display.set_mode(size)
-
+    BG = pygame.image.load("image/fon.jpg")
+    BG = pygame.transform.scale(BG, (1280, 720))
     menu(screen)
