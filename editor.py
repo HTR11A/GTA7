@@ -30,7 +30,7 @@ def timer(elapsed_time, array, mode=0):
 
 def edit(array, pos, click_time):
     array.append({'Color': (255, 255, 255), 'X_pos': pos,
-                  'Prep_start_time': 0.5, 'Click_time': click_time, 'Radius': 40})
+                  'Prep_start_time': 0.5, 'Click_time': click_time, 'Radius': 20})
     print(array)
     return array
 
