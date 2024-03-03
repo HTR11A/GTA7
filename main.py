@@ -3,20 +3,29 @@ import time
 from editor import draw, timer, edit, draw_timeline, play_pause, pause_menu, load_audio, alter_playback_speed
 from menu import Button
 from game import click_circle, draw_red_circles, color_change
+from morgen import Morgen
 
 
 def menu(scr):
     global current_size
+
+    BG = pygame.image.load('image/BG.jpg')
+    gta7 = pygame.image.load('image/GTA7_IMG.png')
+    gta7 = pygame.transform.scale(gta7, (600, 600))
+    # gta7_rect = gta7.get_rect(bottomright=(123, 234))
+
     img = pygame.image.load('image/button.png')
     img = pygame.transform.scale(img, (300, 75))
+
     resume_btn = Button('Continue', img, screen_w // 2, screen_h // 2, scr)
     load_level_btn = Button('Load level', pygame.transform.scale(img, (325, 75)), screen_w // 2, screen_h // 2 + 100, scr)
     editor_btn = Button('Create new level', pygame.transform.scale(img, (450, 75)), screen_w // 2, screen_h // 2 + 200, scr)
     quit_btn = Button('Quit', pygame.transform.scale(img, (200, 75)), screen_w // 2, screen_h // 2 + 300, scr)
+
     running = True
     while running:
-        BG = pygame.image.load('image/BG.jpg')
         scr.blit(BG, (0, 0))
+        scr.blit(gta7, (475, -100))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -41,6 +50,7 @@ def menu(scr):
         editor_btn.update()
         quit_btn.update()
         pygame.display.flip()
+        pygame.display.update()
 
     pygame.quit()
 
@@ -132,14 +142,17 @@ def editor(scr):
     opt_playback_speed = dur_slow / total_duration
     editor_is_paused = False
     running = True
+
     img = pygame.image.load('image/Morgenshtern.png')
     img = pygame.transform.scale(img, (200, 100))
+    BG2 = pygame.image.load('image/BG_Create_lvl.jpg')
+
     save_btn = Button('Save', img, 400, 110, scr)
     menu_btn = Button('Quit to menu', img, 400, 250, scr)
     img = pygame.transform.scale(img, (50, 50))
     velocity_btn = Button(str(playback_speed), img, timeline_x + timeline_width + 35, timeline_y, scr)
     while running:
-        scr.fill((0, 0, 0))
+        scr.blit(BG2, (0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -158,13 +171,15 @@ def editor(scr):
                     if playback_speed == 1:
                         alter_playback_speed(audio_file, temp, opt_playback_speed)
                         playback_speed = opt_playback_speed
+                        velocity_btn.changetext('1.5')
                     else:
                         alter_playback_speed(audio_file, temp, 1)
                         playback_speed = 1
+                        velocity_btn.changetext('1')
                     if is_playing:
                         pp = play_pause(is_playing, paused_time, start_time, playback_speed)
                         is_playing, paused_time, start_time = pp[0], pp[1], pp[2]
-                    velocity_btn.changetext(str(round(playback_speed)))
+                    # velocity_btn.changetext(str(round(playback_speed)))
                 elif timeline_y <= event.pos[1] <= timeline_y + 30:
                     edit_timeline = True
                     is_dragging = True
@@ -213,5 +228,4 @@ if __name__ == '__main__':
     size = width, height = 800, 400
     screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
     current_size = screen.get_size()
-
     menu(screen)

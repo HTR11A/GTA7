@@ -47,6 +47,7 @@ def play_pause(is_playing, paused_time, start_time, playback_speed):
     if not is_playing:
         is_playing = True
         start_time = time.time() - paused_time
+        print((time.time() - start_time) * playback_speed)
         pygame.mixer.music.play(start=(time.time() - start_time) * playback_speed)
     else:
         is_playing = False
