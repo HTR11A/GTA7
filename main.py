@@ -6,15 +6,17 @@ from game import click_circle, draw_red_circles, color_change
 
 
 def menu(scr):
-    img = pygame.image.load('image/Morgenshtern.png')
-    img = pygame.transform.scale(img, (200, 100))
-    resume_btn = Button('Continue', img, 200, 10, scr)
-    load_level_btn = Button('Load level', img, 200, 110, scr)
-    editor_btn = Button('Create new level', img, 200, 210, scr)
-    quit_btn = Button('Quit', img, 200, 310, scr)
+    global current_size
+    img = pygame.image.load('image/button.png')
+    img = pygame.transform.scale(img, (300, 75))
+    resume_btn = Button('Continue', img, screen_w // 2, screen_h // 2, scr)
+    load_level_btn = Button('Load level', pygame.transform.scale(img, (325, 75)), screen_w // 2, screen_h // 2 + 100, scr)
+    editor_btn = Button('Create new level', pygame.transform.scale(img, (450, 75)), screen_w // 2, screen_h // 2 + 200, scr)
+    quit_btn = Button('Quit', pygame.transform.scale(img, (200, 75)), screen_w // 2, screen_h // 2 + 300, scr)
     running = True
     while running:
-        scr.fill((0, 0, 0))
+        BG = pygame.image.load('image/BG.jpg')
+        scr.blit(BG, (0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -32,6 +34,8 @@ def menu(scr):
                 load_level_btn.hover(event.pos)
                 editor_btn.hover(event.pos)
                 quit_btn.hover(event.pos)
+            elif event.type == pygame.VIDEORESIZE:
+                current_size = event.size
         resume_btn.update()
         load_level_btn.update()
         editor_btn.update()
@@ -203,7 +207,11 @@ def editor(scr):
 
 if __name__ == '__main__':
     pygame.init()
+
+    info = pygame.display.Info()
+    screen_w, screen_h = info.current_w, info.current_h
     size = width, height = 800, 400
-    screen = pygame.display.set_mode(size)
+    screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
+    current_size = screen.get_size()
 
     menu(screen)

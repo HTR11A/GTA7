@@ -9,7 +9,7 @@ class Button:
         self.y_pos = y_pos
         self.screen = screen
         self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
-        self.font = pygame.font.SysFont(None, 24)
+        self.font = pygame.font.Font("fonts/font.ttf", 25)
         self.text_obj = self.font.render(self.text_str, True, (255, 255, 255))
         self.text_rect = self.text_obj.get_rect(center=(self.x_pos, self.y_pos))
 
@@ -24,7 +24,7 @@ class Button:
 
     def hover(self, position):
         if self.rect.left <= position[0] < self.rect.right and self.rect.top <= position[1] < self.rect.bottom:
-            self.text_obj = self.font.render(self.text_str, True, "green")
+            self.text_obj = self.font.render(self.text_str, True, "blue")
         else:
             self.text_obj = self.font.render(self.text_str, True, "white")
 
