@@ -14,35 +14,44 @@ def timer(elapsed_time, array, mode=0):
         for e in array:
             if e['Click_time'] - e['Prep_start_time'] <= elapsed_time <= e['Click_time']:
                 if e['Click_time'] - e['Prep_start_time'] >= 0:
+                    e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
                 else:
                     e['Prep_start_time'] = e['Click_time']
+                    e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
     else:
         for e in array:
-            if e['Click_time'] <= elapsed_time <= e['Click_time']:
+            if e['Click_time'] - e['Prep_start_time'] <= elapsed_time <= e['Click_time']:
                 if e['Click_time'] - e['Prep_start_time'] >= 0:
+                    e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
                 else:
                     e['Prep_start_time'] = e['Click_time']
+                    e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
             elif e['Click_time'] <= elapsed_time <= e['Click_time'] + 0.5 and e['Radius'] >= 0:
                 b = {'Color': (255, 255, 255), 'X_pos': e['X_pos'],
                      'Prep_start_time': e['Prep_start_time'], 'Click_time': e['Click_time'],
-                     'Radius': e['Radius'] - round((elapsed_time - e['Click_time']) * 13 * e['Radius'], 2), 'ID': e['ID']}
+                     'Radius': e['Radius'] - round((elapsed_time - e['Click_time']) * 13 * e['Radius'], 2),
+                     'ID': e['ID'], 'Ring': 0}
                 output.append(b)
     return output
 
 
 def edit(array, pos, click_time):
+    print('added circle')
+    print('added circle')
     array.append({'Color': (255, 255, 255), 'X_pos': pos,
-                  'Prep_start_time': 0.5, 'Click_time': click_time, 'Radius': 20, 'ID': len(array)})
+                  'Prep_start_time': 0.5, 'Click_time': click_time, 'Radius': 40, 'ID': len(array)})
     return array
 
 
 def draw(array, screen):
     for circle in array:
         pygame.draw.circle(screen, circle['Color'], circle['X_pos'], circle['Radius'])
+        pygame.draw.circle(screen, circle['Color'], circle['X_pos'],
+                           circle['Radius'] + circle['Ring'] * circle['Radius'], width=int(circle['Radius'] / 5))
 
 
 def play_pause(is_playing, paused_time, start_time, playback_speed):
@@ -58,24 +67,31 @@ def play_pause(is_playing, paused_time, start_time, playback_speed):
     return is_playing, paused_time, start_time
 
 
-def draw_timeline(selector_position, elapsed_time, total_duration, screen):
+def draw_timeline(selector_position, elapsed_time, total_duration, screen, current_size):
     font = pygame.font.SysFont(None, 24)
     img = font.render(f"{elapsed_time:.2f} / {total_duration}s", True, (255, 255, 255))
     screen.blit(img, (20, 20))
 
-    timeline_width = 600
-    timeline_height = 30
-    timeline_x = (800 - timeline_width) // 2
-    timeline_y = 400 // 1.5
-    selector_width = 10
-    selector_height = 30
+    timeline_width = current_size[0] * 3 // 4
+    timeline_height = timeline_width // 20
+    timeline_x = (current_size[0] - timeline_width) // 2
+    timeline_y = current_size[1] - timeline_width // 20
+    selector_width = timeline_width // 60
+    selector_height = selector_width * 3
+    border_radius = timeline_height // 10
 
-    pygame.draw.rect(screen, (255, 255, 255), (timeline_x, timeline_y, timeline_width, timeline_height))  # Таймлайн
-    pygame.draw.rect(screen, (255, 0, 0), (selector_position, timeline_y, selector_width, selector_height))  # Ползунок
+    pygame.draw.rect(screen, (0, 0, 0), (timeline_x - border_radius, timeline_y - border_radius * 2,
+                                         timeline_width + border_radius * 2, timeline_height + border_radius * 2))
+    pygame.draw.rect(screen, (255, 255, 255), (timeline_x, timeline_y - border_radius, timeline_width,
+                                               timeline_height))  # Таймлайн
+    pygame.draw.rect(screen, (255, 0, 0), (selector_position, timeline_y - border_radius, selector_width,
+                                           selector_height))  # Ползунок
 
 
 def pause_menu(screen, current_size):
-    pygame.draw.rect(screen, (62, 62, 72), (current_size[0] / 10, current_size[1] / 10, current_size[0] / 10 * 8, current_size[1] / 10 * 8), border_radius=20)
+    pygame.draw.rect(screen, (62, 62, 72),
+                     (current_size[0] / 10, current_size[1] / 10, current_size[0] / 10 * 8, current_size[1] / 10 * 8),
+                     border_radius=20)
 
 
 def load_audio(inp):

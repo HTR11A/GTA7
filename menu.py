@@ -1,5 +1,7 @@
 import tkinter as tk
+from os import listdir
 from tkinter import filedialog as fd
+import json
 
 import pygame
 
@@ -22,7 +24,8 @@ class Button:
         self.screen.blit(self.text_obj, self.text_rect)
 
     def checkforinput(self, position):
-        if self.rect.left <= position[0] < self.rect.right and self.rect.top <= position[1] < self.rect.bottom and self.enabled:
+        if self.rect.left <= position[0] < self.rect.right and \
+                self.rect.top <= position[1] < self.rect.bottom and self.enabled:
             return True
         return False
 
@@ -64,3 +67,12 @@ def get_image_path():
     # root.title('Tkinter Open File Dialog')
     root.withdraw()
     return fd.askopenfilename(filetypes=[('PNG', '.png'), ('JPG', '.jpg')], title='Выберите фон')
+
+
+def get_level_files(levels, level_selector):
+    with open('levels/' + levels[level_selector] + '/level.json') as f:
+        circles = json.load(f)
+    if 'bg.png' in listdir('levels/' + levels[level_selector]):
+        return circles, 'levels/' + levels[level_selector] + '/audio.mp3', \
+               'levels/' + levels[level_selector] + '/bg.png'
+    return circles, 'levels/' + levels[level_selector] + '/audio.mp3', 'levels/' + levels[level_selector] + '/bg.jpg'

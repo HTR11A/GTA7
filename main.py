@@ -1,9 +1,10 @@
 import pygame
 import pygame_gui
 import time
+import json
 from editor import draw, timer, edit, draw_timeline, play_pause, pause_menu, load_audio, alter_playback_speed, \
     close_editor, del_circle, save_level
-from menu import Button, get_levels, get_audio_path, get_image_path
+from menu import Button, get_levels, get_audio_path, get_image_path, get_level_files
 from game import click_circle, draw_red_circles, color_change
 from os import listdir
 from morgen import Morgen
@@ -59,15 +60,7 @@ def menu(scr):
                     create_level_btn.changetext('Loading')
                     editor(scr, editor_audio_path, editor_image_path, 'levels/' + name_input.get_text())
                 if resume_btn.checkforinput(event.pos) and not edit_menu_on:
-                    for e in listdir('levels/' + levels[level_selector]):
-                        if e == 'bg.png':
-                            game(scr, 'levels/' + levels[level_selector] + '/audio.mp3',
-                                 'levels/' + levels[level_selector] + '/bg.png', 'levels/' + levels[level_selector])
-                            print(scr, 'levels/' + levels[level_selector] + '/audio.mp3',
-                                  'levels/' + levels[level_selector] + '/bg.png', 'levels/' + levels[level_selector])
-                        elif e == 'bg.jpg':
-                            game(scr, 'levels/' + levels[level_selector] + '/audio.mp3',
-                                 'levels/' + levels[level_selector] + '/bg.jpg', 'levels/' + levels[level_selector])
+                    game(scr, *get_level_files(levels, level_selector))
                 if editor_btn.checkforinput(event.pos) and not edit_menu_on:
                     edit_menu_on = True
                 if quit_btn.checkforinput(event.pos) and not edit_menu_on:
@@ -117,18 +110,16 @@ def menu(scr):
     pygame.quit()
 
 
-def game(scr):
-    global circles
-    circles_game = circles.copy()
+def game(scr, circles_game, audio_path, image_path):
     simultaneous_circles = []
     unpressed_circles = []
     total_duration = 40
     is_playing = False
     game_start_time = 0
-    editor_is_paused = False
+    game_is_paused = False
     running = True
-    img = pygame.image.load('image/Morgenshtern.png')
-    img = pygame.transform.scale(img, (200, 100))
+    img = pygame.image.load('image/button.png')
+    img = pygame.transform.scale(img, (300, 75))
     menu_btn = Button('Quit to menu', img, 400, 250, scr)
     start_btn = Button('START', img, 400, 250, scr)
     n = 0
@@ -141,16 +132,16 @@ def game(scr):
                     running = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        editor_is_paused = not editor_is_paused
+                        game_is_paused = not game_is_paused
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if start_btn.checkforinput(event.pos) and not editor_is_paused and not is_playing:
+                    if start_btn.checkforinput(event.pos) and not game_is_paused and not is_playing:
                         game_start_time = time.time() - game_start_time
                         is_playing = True
                         print(1)
-                    if len(simultaneous_circles) > 0 and not editor_is_paused and is_playing:
+                    if len(simultaneous_circles) > 0 and not game_is_paused and is_playing:
                         simultaneous_circles, unpressed_circles = click_circle(event.pos, simultaneous_circles,
                                                                                unpressed_circles)
-                    if menu_btn.checkforinput(event.pos) and editor_is_paused:
+                    if menu_btn.checkforinput(event.pos) and game_is_paused:
                         menu(scr)
                         print(2)
                 elif event.type == pygame.MOUSEMOTION:
@@ -181,7 +172,7 @@ def game(scr):
                     if elapsed_time < i[0]['Prep_start_time'] + i[0]['Click_time']:
                         draw_red_circles(i, screen)
 
-            if editor_is_paused:
+            if game_is_paused:
                 pause_menu(scr, current_size)
                 menu_btn.update()
             pygame.display.flip()
@@ -189,33 +180,37 @@ def game(scr):
 
 
 def editor(scr, audio_file, bg_path, directory):
+    global current_size
     circles = []
     bg = pygame.image.load(bg_path)
+    bg = pygame.transform.scale(bg, (current_size[0], current_size[1]))
     total_duration, temp, dur_slow = load_audio(audio_file)
-    print(total_duration, temp)
     is_playing = False
     is_dragging = False
     edit_timeline = False
     start_time = 0
     paused_time = 0
     elapsed_time = 0
-    timeline_width = 600
-    timeline_x = (800 - timeline_width) // 2
-    timeline_y = 400 // 1.5
+    timeline_width = current_size[0] * 3 // 4
+    timeline_height = timeline_width // 20
+    border_radius = timeline_height // 10
+    timeline_x = (current_size[0] - timeline_width) // 2
+    timeline_y = current_size[1] - timeline_height
     selector_position = timeline_x
-    selector_width = 10
+    selector_width = timeline_width // 60
     playback_speed = 1
     opt_playback_speed = dur_slow / total_duration
     editor_is_paused = False
     running = True
 
-    img = pygame.image.load('image/Morgenshtern.png')
-    img = pygame.transform.scale(img, (200, 100))
+    img = pygame.image.load('image/button.png')
+    img = pygame.transform.scale(img, (300, 75))
 
-    save_btn = Button('Save', img, 400, 110, scr)
-    menu_btn = Button('Quit to menu', img, 400, 250, scr)
-    img = pygame.transform.scale(img, (50, 50))
-    velocity_btn = Button(str(playback_speed), img, timeline_x + timeline_width + 35, timeline_y, scr)
+    save_btn = Button('Save', img, current_size[0] // 2, current_size[1] // 2 - current_size[1] // 10, scr)
+    menu_btn = Button('Quit to menu', img, current_size[0] // 2, current_size[1] // 2 + current_size[1] // 10, scr)
+    img = pygame.transform.scale(img, (timeline_height, timeline_height))
+    velocity_btn = Button(str(playback_speed), img,
+                          timeline_x + timeline_width + timeline_height // 2 + border_radius, timeline_y + timeline_height // 2, scr)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -246,11 +241,11 @@ def editor(scr, audio_file, bg_path, directory):
                             pp = play_pause(is_playing, paused_time, start_time, playback_speed)
                             is_playing, paused_time, start_time = pp[0], pp[1], pp[2]
                         velocity_btn.changetext(str(round(playback_speed, 1)))
-                    elif timeline_y <= event.pos[1] <= timeline_y + 30:
+                    elif timeline_y - 2 * border_radius <= event.pos[1] <= timeline_y + timeline_height:
                         edit_timeline = True
                         is_dragging = True
                         is_playing = False
-                        mouse_x, _ = event.pos
+                        mouse_x = event.pos[0]
                         selector_position = max(timeline_x, min(mouse_x, timeline_x + timeline_width - selector_width))
                     else:
                         circles = edit(circles, event.pos, elapsed_time)
@@ -267,31 +262,6 @@ def editor(scr, audio_file, bg_path, directory):
                                 break
                     except NameError:
                         pass
-                if editor_is_paused and save_btn.checkforinput(event.pos):
-                    save_level(circles, audio_file, bg, directory)
-                elif editor_is_paused and menu_btn.checkforinput(event.pos):
-                    menu(scr)
-                elif velocity_btn.checkforinput(event.pos):
-                    if playback_speed == 1:
-                        alter_playback_speed(audio_file, temp, opt_playback_speed)
-                        playback_speed = opt_playback_speed
-                        velocity_btn.changetext('1.5')
-                    else:
-                        alter_playback_speed(audio_file, temp, 1)
-                        playback_speed = 1
-                        velocity_btn.changetext('1')
-                    if is_playing:
-                        pp = play_pause(is_playing, paused_time, start_time, playback_speed)
-                        is_playing, paused_time, start_time = pp[0], pp[1], pp[2]
-                    # velocity_btn.changetext(str(round(playback_speed)))
-                elif timeline_y <= event.pos[1] <= timeline_y + 30:
-                    edit_timeline = True
-                    is_dragging = True
-                    is_playing = False
-                    mouse_x, _ = event.pos
-                    selector_position = max(timeline_x, min(mouse_x, timeline_x + timeline_width - selector_width))
-                else:
-                    circles = edit(circles, event.pos, elapsed_time)
             elif event.type == pygame.MOUSEBUTTONUP:
                 if edit_timeline is True:
                     edit_timeline = False
@@ -315,12 +285,12 @@ def editor(scr, audio_file, bg_path, directory):
             selector_position = timeline_x + (elapsed_time / total_duration) * (timeline_width - selector_width)
         cur_circles = timer(elapsed_time, circles, mode=1)
         draw(cur_circles, screen)
-        draw_timeline(selector_position, elapsed_time, total_duration, screen)
+        draw_timeline(selector_position, elapsed_time, total_duration, screen, current_size)
+        velocity_btn.update()
         if editor_is_paused:
             pause_menu(scr, current_size)
             save_btn.update()
             menu_btn.update()
-        velocity_btn.update()
         pygame.display.flip()
     pygame.quit()
 
