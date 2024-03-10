@@ -6,32 +6,62 @@ import tempfile
 import os
 import json
 import shutil
+import tkinter as tk
+from tkinter import colorchooser
 
 
 def timer(elapsed_time, array, mode=0):
     output = []
     if mode == 0:
-        for e in array:
-            if e['Click_time'] - e['Prep_start_time'] <= elapsed_time <= e['Click_time']:
-                if e['Click_time'] - e['Prep_start_time'] >= 0:
-                    e['Ring'] = (e['Click_time'] - elapsed_time) * 8
+        missed = []
+        array_copy = array.copy()
+        for i in range(len(array)):
+            if array[i]['Click_time'] - array[i]['Prep_start_time'] <= elapsed_time <= array[i]['Click_time'] + 0.2:
+                if array[i]['Click_time'] - array[i]['Prep_start_time'] >= 0:
+                    e = array[i].copy()
+                    # print((e['Click_time'] - elapsed_time) / e['Prep_start_time'])
+                    if e['Prep_start_time'] != 0:
+                        e['Ring'] = (e['Click_time'] - elapsed_time) / e['Prep_start_time'] * 2.5
+                    else:
+                        e['Ring'] = 0
+                    # e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
                 else:
+                    e = array[i].copy()
                     e['Prep_start_time'] = e['Click_time']
-                    e['Ring'] = (e['Click_time'] - elapsed_time) * 8
+                    if e['Prep_start_time'] != 0:
+                        e['Ring'] = (e['Click_time'] - elapsed_time) / e['Prep_start_time'] * 2.5
+                    else:
+                        e['Ring'] = 0
+                    # e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
+            elif array[i]['Click_time'] + 0.2 < elapsed_time:
+                missed.append(array[i])
+                for j in range(len(array_copy)):
+                    if array_copy[j]['ID'] == array[i]['ID']:
+                        del array_copy[j]
+                        break
+        return output, missed, array
     else:
         for e in array:
             if e['Click_time'] - e['Prep_start_time'] <= elapsed_time <= e['Click_time']:
                 if e['Click_time'] - e['Prep_start_time'] >= 0:
-                    e['Ring'] = (e['Click_time'] - elapsed_time) * 8
+                    if e['Prep_start_time'] != 0:
+                        e['Ring'] = (e['Click_time'] - elapsed_time) / e['Prep_start_time'] * 2.5
+                    else:
+                        e['Ring'] = 0
+                    # e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
                 else:
                     e['Prep_start_time'] = e['Click_time']
-                    e['Ring'] = (e['Click_time'] - elapsed_time) * 8
+                    if e['Prep_start_time'] != 0:
+                        e['Ring'] = (e['Click_time'] - elapsed_time) / e['Prep_start_time'] * 2.5
+                    else:
+                        e['Ring'] = 0
+                    # e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
             elif e['Click_time'] <= elapsed_time <= e['Click_time'] + 0.5 and e['Radius'] >= 0:
-                b = {'Color': (255, 255, 255), 'X_pos': e['X_pos'],
+                b = {'Color': e['Color'], 'X_pos': e['X_pos'],
                      'Prep_start_time': e['Prep_start_time'], 'Click_time': e['Click_time'],
                      'Radius': e['Radius'] - round((elapsed_time - e['Click_time']) * 13 * e['Radius'], 2),
                      'ID': e['ID'], 'Ring': 0}
@@ -39,26 +69,35 @@ def timer(elapsed_time, array, mode=0):
     return output
 
 
-def edit(array, pos, click_time):
-    print('added circle')
-    print('added circle')
-    array.append({'Color': (255, 255, 255), 'X_pos': pos,
-                  'Prep_start_time': 0.5, 'Click_time': click_time, 'Radius': 40, 'ID': len(array)})
+def edit(array, pos, click_time, radius, preptime, color):
+    array.append({'Color': color, 'X_pos': pos,
+                  'Prep_start_time': preptime, 'Click_time': click_time, 'Radius': radius, 'ID': len(array)})
     return array
 
 
 def draw(array, screen):
     for circle in array:
-        pygame.draw.circle(screen, circle['Color'], circle['X_pos'], circle['Radius'])
+        edge_color = list(circle['Color'])
+        if edge_color[0] <= 40 and edge_color[1] <= 40 and edge_color[2] <= 40:
+            for i in range(3):
+                edge_color[i] += 40
+        else:
+            for i in range(3):
+                if edge_color[i] >= 40:
+                    edge_color[i] -= 40
+                else:
+                    edge_color[i] = 0
         pygame.draw.circle(screen, circle['Color'], circle['X_pos'],
                            circle['Radius'] + circle['Ring'] * circle['Radius'], width=int(circle['Radius'] / 5))
+        pygame.draw.circle(screen, circle['Color'], circle['X_pos'], circle['Radius'])
+        pygame.draw.circle(screen, edge_color, circle['X_pos'], circle['Radius'],
+                           width=round(circle['Radius'] * 0.15))
 
 
 def play_pause(is_playing, paused_time, start_time, playback_speed):
     if not is_playing:
         is_playing = True
         start_time = time.time() - paused_time
-        print((time.time() - start_time) * playback_speed)
         pygame.mixer.music.play(start=(time.time() - start_time) * playback_speed)
     else:
         is_playing = False
@@ -80,17 +119,19 @@ def draw_timeline(selector_position, elapsed_time, total_duration, screen, curre
     selector_height = selector_width * 3
     border_radius = timeline_height // 10
 
-    pygame.draw.rect(screen, (0, 0, 0), (timeline_x - border_radius, timeline_y - border_radius * 2,
-                                         timeline_width + border_radius * 2, timeline_height + border_radius * 2))
-    pygame.draw.rect(screen, (255, 255, 255), (timeline_x, timeline_y - border_radius, timeline_width,
+    pygame.draw.rect(screen, (255, 255, 255), (timeline_x - border_radius, timeline_y - border_radius * 2,
+                                               timeline_width + border_radius * 2, timeline_height + border_radius * 2))
+    pygame.draw.rect(screen, (237, 107, 165), (timeline_x, timeline_y - border_radius, timeline_width,
                                                timeline_height))  # Таймлайн
-    pygame.draw.rect(screen, (255, 0, 0), (selector_position, timeline_y - border_radius, selector_width,
-                                           selector_height))  # Ползунок
+    pygame.draw.rect(screen, (252, 144, 192), (selector_position, timeline_y - border_radius, selector_width,
+                                               selector_height))  # Ползунок
 
 
-def pause_menu(screen, current_size):
-    pygame.draw.rect(screen, (62, 62, 72),
-                     (current_size[0] / 10, current_size[1] / 10, current_size[0] / 10 * 8, current_size[1] / 10 * 8),
+def pause_menu(screen, current_size, bg):
+    screen.blit(bg, (0, 0))
+    pygame.draw.rect(screen, (45, 77, 133),
+                     (current_size[0] / 10 * 2, current_size[1] / 10 * 2, current_size[0] / 10 * 6,
+                      current_size[1] / 10 * 6),
                      border_radius=20)
 
 
@@ -130,14 +171,32 @@ def del_circle(args, cur_circles):
         a, b = centre[0], centre[1]  # координаты центра круга
         r = cur_circles[i]['Radius']
         if abs(a - x) ** 2 + abs(b - y) ** 2 <= r ** 2:
-            print(cur_circles[i])
-            print('ID RETURNED:', cur_circles[i]['ID'])
             return cur_circles[i]['ID']
 
 
 def save_level(circles, audio_path, image_path, directory):
+    circles.sort(key=lambda x: x['Click_time'])
     os.mkdir(directory)
     with open(directory + '/level.json', 'w') as f:
         json.dump(circles, f)
     shutil.copyfile(audio_path, directory + '/audio.mp3')
     shutil.copyfile(image_path, directory + '/bg.png')
+
+
+def get_color(cur_color):
+    root = tk.Tk()
+    root.withdraw()
+    result = []
+    a = colorchooser.askcolor(title="Выберите цвет")[0]
+    if a is not None:
+        for e in a:
+            result.append(int(e))
+        return tuple(result)
+    return cur_color
+
+
+def draw_swatch(color, screen, pos, size):
+    pygame.draw.rect(screen, color, (int(pos[0] - size / 3), int(pos[1] - size / 3), int(size / 1.5),
+                                     int(size / 1.5)), border_radius=20)
+    pygame.draw.rect(screen, (240, 240, 240), (int(pos[0] - size / 3), int(pos[1] - size / 3), int(size / 1.5),
+                                               int(size / 1.5)), border_radius=20, width=int(size / 18))
