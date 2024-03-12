@@ -20,7 +20,6 @@ def click_circle(args, clickable_circles, circles, elapsed_time):
             if circles[i]['ID'] == clickable_circles[0]['ID']:
                 del circles[i]
                 return circles, False, clickable_circles[0]
-    # опять же, проигрыш
 
 
 def draw_x(elapsed_time, array, x_mark, scr):
@@ -41,7 +40,6 @@ def draw_check(elapsed_time, array, scr):
     for i in range(len(array)):
         if elapsed_time - array[i]['Click_time'] <= 1 and array[i]['Radius'] > 10:
             array[i]['Radius'] -= round((elapsed_time - array[i]['Click_time']) * 0.5 * array[i]['Radius'])
-            # array[i]['Ring'] += round((elapsed_time - array[i]['Click_time']) * 10)
         else:
             for j in range(len(array_copy)):
                 if array_copy[j]['ID'] == array[i]['ID']:

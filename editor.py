@@ -19,12 +19,10 @@ def timer(elapsed_time, array, mode=0):
             if array[i]['Click_time'] - array[i]['Prep_start_time'] <= elapsed_time <= array[i]['Click_time'] + 0.2:
                 if array[i]['Click_time'] - array[i]['Prep_start_time'] >= 0:
                     e = array[i].copy()
-                    # print((e['Click_time'] - elapsed_time) / e['Prep_start_time'])
                     if e['Prep_start_time'] != 0:
                         e['Ring'] = (e['Click_time'] - elapsed_time) / e['Prep_start_time'] * 2.5
                     else:
                         e['Ring'] = 0
-                    # e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
                 else:
                     e = array[i].copy()
@@ -33,7 +31,6 @@ def timer(elapsed_time, array, mode=0):
                         e['Ring'] = (e['Click_time'] - elapsed_time) / e['Prep_start_time'] * 2.5
                     else:
                         e['Ring'] = 0
-                    # e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
             elif array[i]['Click_time'] + 0.2 < elapsed_time:
                 missed.append(array[i])
@@ -50,7 +47,6 @@ def timer(elapsed_time, array, mode=0):
                         e['Ring'] = (e['Click_time'] - elapsed_time) / e['Prep_start_time'] * 2.5
                     else:
                         e['Ring'] = 0
-                    # e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
                 else:
                     e['Prep_start_time'] = e['Click_time']
@@ -58,7 +54,6 @@ def timer(elapsed_time, array, mode=0):
                         e['Ring'] = (e['Click_time'] - elapsed_time) / e['Prep_start_time'] * 2.5
                     else:
                         e['Ring'] = 0
-                    # e['Ring'] = (e['Click_time'] - elapsed_time) * 8
                     output.append(e)
             elif e['Click_time'] <= elapsed_time <= e['Click_time'] + 0.5 and e['Radius'] >= 0:
                 b = {'Color': e['Color'], 'X_pos': e['X_pos'],
@@ -78,15 +73,15 @@ def edit(array, pos, click_time, radius, preptime, color):
 def draw(array, screen):
     for circle in array:
         edge_color = list(circle['Color'])
-        if edge_color[0] <= 40 and edge_color[1] <= 40 and edge_color[2] <= 40:
+        if edge_color[0] > 200 and edge_color[1] > 200 and edge_color[2] > 200:
             for i in range(3):
-                edge_color[i] += 40
+                edge_color[i] -= 55
         else:
             for i in range(3):
-                if edge_color[i] >= 40:
-                    edge_color[i] -= 40
+                if edge_color[i] <= 200:
+                    edge_color[i] += 55
                 else:
-                    edge_color[i] = 0
+                    edge_color[i] = 255
         pygame.draw.circle(screen, circle['Color'], circle['X_pos'],
                            circle['Radius'] + circle['Ring'] * circle['Radius'], width=int(circle['Radius'] / 5))
         pygame.draw.circle(screen, circle['Color'], circle['X_pos'], circle['Radius'])

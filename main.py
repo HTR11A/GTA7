@@ -15,7 +15,6 @@ def menu(scr):
     BG = pygame.image.load('image/BG.jpg')
     gta7 = pygame.image.load('image/logo2.png')
     gta7 = pygame.transform.scale(gta7, (400, 400))
-    # gta7_rect = gta7.get_rect(bottomright=(123, 234))
 
     long_button = pygame.image.load('image/long_button.png')
     long_button = pygame.transform.scale(long_button, (300, 75))
@@ -24,8 +23,6 @@ def menu(scr):
     menu_bg = pygame.image.load('image/menu_bg.png')
     menu_bg = pygame.transform.scale(menu_bg, (screen_w, screen_h))
 
-    # img = pygame.image.load('image/Morgenshtern.png')
-    # img = pygame.transform.scale(img, (200, 100))
     resume_btn = Button('Играть', long_button, screen_w // 2, 5 / 10 * screen_h, scr)
     editor_btn = Button('Редактор', long_button, screen_w // 2, 6 / 10 * screen_h, scr)
     quit_btn = Button('Выйти', long_button, screen_w // 2, 7 / 10 * screen_h, scr)
@@ -145,6 +142,19 @@ def game(scr, circles_game, audio_path, image_path):
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     game_is_paused = not game_is_paused
+                else:
+                    if not game_is_paused and is_playing and len(clickable_circles) > 0:
+                        a = click_circle(pygame.mouse.get_pos(), clickable_circles, circles_game, elapsed_time)
+                        circles_game = a[0]
+                        if a[1]:
+                            a[2]['Click_time'] = elapsed_time
+                            a[2]['Ring'] = 0
+                            hit_circles.append(a[2])
+                            hit_counter += 1
+                        else:
+                            a[2]['Click_time'] = elapsed_time
+                            a[2]['Ring'] = 0
+                            missed_circles.append(a[2])
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if not game_is_paused and start_btn.checkforinput(event.pos) and not is_playing:
                     game_start_time = time.time() - game_start_time
@@ -256,6 +266,8 @@ def editor(scr, audio_file, bg_path, directory):
                     is_playing, paused_time, start_time = pp[0], pp[1], pp[2]
                 elif event.key == pygame.K_ESCAPE:
                     editor_is_paused = not editor_is_paused
+                else:
+                    circles = edit(circles, pygame.mouse.get_pos(), elapsed_time, cur_radius, cur_preptime, cur_color)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if editor_is_paused and save_btn.checkforinput(event.pos):
@@ -358,7 +370,9 @@ if __name__ == '__main__':
 
     info = pygame.display.Info()
     screen_w, screen_h = info.current_w, info.current_h
-    # size = width, height = 800, 400
     screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
     current_size = screen.get_size()
-    menu(screen)
+    try:
+        menu(screen)
+    except pygame.error:
+        pass
