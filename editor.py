@@ -165,10 +165,9 @@ def del_circle(args, cur_circles):
     for i in range(len(cur_circles)):
         centre = cur_circles[i]['X_pos']
         a, b = centre[0], centre[1]  # координаты центра круга
-        if cur_circles[i]['Radius'] > 0:
-            r = cur_circles[i]['Radius']
-            if abs(a - x) ** 2 + abs(b - y) ** 2 <= r ** 2:
-                return cur_circles[i]['ID']
+        r = cur_circles[i]['Radius']
+        if r > 0 and abs(a - x) ** 2 + abs(b - y) ** 2 <= r ** 2:
+            return cur_circles[i]['ID']
 
 
 def save_level(circles, audio_path, image_path, directory):
