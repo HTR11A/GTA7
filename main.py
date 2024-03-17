@@ -13,6 +13,7 @@ def menu(scr):
     screen_w, screen_h = current_size[0], current_size[1]
 
     BG = pygame.image.load('image/BG.jpg')
+    BG = pygame.transform.scale(BG, (screen_w, screen_h))
     gta7 = pygame.image.load('image/logo2.png')
     gta7 = pygame.transform.scale(gta7, (400, 400))
 
@@ -267,6 +268,7 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
     preptime_btn = Button(str(cur_preptime) + 's', short_button, button_indent,
                           timeline_y - border_radius + timeline_height // 2, scr)
     while running:
+        scr.fill((0, 0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
