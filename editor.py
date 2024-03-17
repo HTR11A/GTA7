@@ -131,19 +131,15 @@ def pause_menu(screen, current_size, bg):
 
 
 def load_audio(inp):
-    print('loading started')
     audio, sr = librosa.load(inp, sr=None)
     stretch_factor = 1 / 1.5
-    print('applying effect')
     audio_fast = librosa.effects.time_stretch(audio, rate=stretch_factor)
-    print('effect applied')
     temp_fd, temp_path = tempfile.mkstemp(suffix='.wav')
     sf.write(temp_path, audio_fast, sr)
     os.close(temp_fd)
 
     pygame.mixer.init()
     pygame.mixer.music.load(inp)
-    print('loading ended')
     return round(librosa.get_duration(path=inp)), temp_path, round(librosa.get_duration(path=temp_path))
 
 
