@@ -281,8 +281,8 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if editor_is_paused and save_btn.checkforinput(event.pos):
-                        save_level(circles, audio_file, bg_path, directory)
                         close_editor(audio_file, temp)
+                        save_level(circles, audio_file, bg_path, directory)
                         menu(scr)
                     elif editor_is_paused and menu_btn.checkforinput(event.pos):
                         close_editor(audio_file, temp)

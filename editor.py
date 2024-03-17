@@ -156,6 +156,7 @@ def alter_playback_speed(og, slowed, playback_speed):
 
 def close_editor(inp, temp_path):
     pygame.mixer.music.load(inp)
+    # pygame.mixer.quit()
     os.remove(temp_path)
 
 
@@ -171,11 +172,16 @@ def del_circle(args, cur_circles):
 
 def save_level(circles, audio_path, image_path, directory):
     circles.sort(key=lambda x: x['Click_time'])
-    os.mkdir(directory)
+    if not os.path.isdir(directory):
+        os.mkdir(directory)
+    if os.path.isfile(directory + '/level.json'):
+        os.remove(directory + '/level.json')
     with open(directory + '/level.json', 'w') as f:
         json.dump(circles, f)
-    shutil.copyfile(audio_path, directory + '/audio.mp3')
-    shutil.copyfile(image_path, directory + '/bg.png')
+    if not os.path.isfile(directory + '/audio.mp3'):
+        shutil.copyfile(audio_path, directory + '/audio.mp3')
+    if not os.path.isfile(directory + '/bg.png'):
+        shutil.copyfile(image_path, directory + '/bg.png')
 
 
 def get_color(cur_color):
