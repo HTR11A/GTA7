@@ -12,6 +12,8 @@ def menu(scr):
     global current_size
     screen_w, screen_h = current_size[0], current_size[1]
 
+    """Инициализация кнопок"""
+
     BG = pygame.image.load('image/BG.jpg')
     gta7 = pygame.image.load('image/logo2.png')
     gta7 = pygame.transform.scale(gta7, (400, 400))
@@ -32,6 +34,7 @@ def menu(scr):
     set_image_btn = Button('Выбрать фон', long_button, screen_w // 2, 6 / 10 * screen_h, scr)
     create_level_btn = Button('Создать', long_button, screen_w // 2, 7 / 10 * screen_h, scr)
     edit_existing_level_btn = Button('Править выбранный', long_button, screen_w // 2, 3 / 10 * screen_h, scr)
+
     editor_audio_path, editor_image_path = '', ''
     levels = listdir('levels')
     level_selector = 0
@@ -40,45 +43,52 @@ def menu(scr):
     name_input = pygame_gui.elements.UITextEntryLine(
         relative_rect=pygame.Rect(((screen_w / 2 - 260, 4 / 10 * screen_h - 38), (520, 76))), manager=manager,
         object_id='#name_input')
+
+    """Главный цикл"""
+
     edit_menu_on = False
     running = True
     while running:
-        scr.blit(BG, (0, 0))
-        scr.blit(gta7, (screen_w / 2 - 200, screen_h / 4.3 - 200))
+        scr.blit(BG, (0, 0))  # Отрисовка фона
+        scr.blit(gta7, (screen_w / 2 - 200, screen_h / 4.3 - 200))  # Отрисовка логотипа
+        # Поле выбора файла
         pygame.draw.rect(scr, (236, 102, 162), (screen_w / 2 - 260, 8 / 10 * screen_h - 38, 520, 76), border_radius=20)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if edit_menu_on and set_audio_btn.checkforinput(event.pos):
+            elif event.type == pygame.MOUSEBUTTONDOWN:  # Нажатие на КМ
+                if edit_menu_on and set_audio_btn.checkforinput(event.pos):  # Выбрать аудио для создания уровня
                     editor_audio_path = get_audio_path()
-                if edit_menu_on and set_image_btn.checkforinput(event.pos):
+                if edit_menu_on and set_image_btn.checkforinput(event.pos):  # Выбрать фон для создания уровня
                     editor_image_path = get_image_path()
                 if edit_menu_on and create_level_btn.checkforinput(event.pos) and \
                         editor_audio_path != '' and editor_image_path != '' and name_input.get_text() != '':
                     create_level_btn.changetext('Loading')
+                    # Вызов редактора
                     editor(scr, editor_audio_path, editor_image_path, 'levels/' + name_input.get_text())
-                if edit_menu_on and edit_existing_level_btn.checkforinput(event.pos):
+                if edit_menu_on and edit_existing_level_btn.checkforinput(event.pos):   # Править существующий уровень
                     edit_existing_level_btn.changetext('Loading')
                     loaded_data = get_level_files(levels, level_selector)
-                    editor(scr, loaded_data[1], loaded_data[2], 'levels/' + levels[level_selector], existing_level=loaded_data[0])
-                if resume_btn.checkforinput(event.pos) and not edit_menu_on:
+                    editor(scr, loaded_data[1], loaded_data[2], 'levels/' + levels[level_selector],
+                           existing_level=loaded_data[0])  # Вызов редактора
+                if resume_btn.checkforinput(event.pos) and not edit_menu_on:  # Играть
                     game(scr, *get_level_files(levels, level_selector))
-                if editor_btn.checkforinput(event.pos) and not edit_menu_on:
+                if editor_btn.checkforinput(event.pos) and not edit_menu_on:  # Открыть редактор
                     edit_menu_on = True
-                if quit_btn.checkforinput(event.pos) and not edit_menu_on:
+                if quit_btn.checkforinput(event.pos) and not edit_menu_on:  # Выйти
                     pygame.quit()
-                if next_btn.checkforinput(event.pos) and not edit_menu_on:
+                if next_btn.checkforinput(event.pos) and not edit_menu_on:  # След. уровень
                     if level_selector < len(levels) - 1:
                         level_selector += 1
                     else:
                         level_selector = 0
-                if prev_btn.checkforinput(event.pos) and not edit_menu_on:
+                if prev_btn.checkforinput(event.pos) and not edit_menu_on:  # Пред. уровень
                     if level_selector > 0:
                         level_selector -= 1
                     else:
                         level_selector = len(levels) - 1
             elif event.type == pygame.MOUSEMOTION:
+                # Подсветка кнопок
                 resume_btn.hover(event.pos)
                 editor_btn.hover(event.pos)
                 quit_btn.hover(event.pos)
@@ -95,6 +105,9 @@ def menu(scr):
                 if event.key == pygame.K_ESCAPE:
                     edit_menu_on = False
             manager.process_events(event)
+
+        """Отрисовка GUI элементов"""
+
         manager.update(ui_clock.tick(60) / 1000)
         resume_btn.update()
         editor_btn.update()
@@ -119,6 +132,9 @@ def game(scr, circles_game, audio_path, image_path):
     global current_size
     bg = pygame.image.load(image_path)
     bg = pygame.transform.scale(bg, (current_size[0], current_size[1]))
+
+    """Инициализация переменных"""
+
     clickable_circles = []
     missed_circles = []
     hit_circles = []
@@ -130,6 +146,9 @@ def game(scr, circles_game, audio_path, image_path):
     game_start_time = 0
     game_is_paused = False
     running = True
+
+    """Инициализация ассетов и кнопок"""
+
     font = pygame.font.Font("fonts/Roboto-Black.ttf", 30)
     x_mark = pygame.image.load('image/x_mark.png')
     x_mark = pygame.transform.scale(x_mark, (50, 50))
@@ -140,60 +159,72 @@ def game(scr, circles_game, audio_path, image_path):
     menu_btn = Button('Quit to menu', long_button, screen_w // 2, screen_h // 2, scr)
     start_btn = Button('START', long_button, screen_w // 2, screen_h // 2, scr)
 
+    """Главный цикл"""
+
     while running:
-        scr.fill((0, 0, 0))
-        scr.blit(bg, (0, 0))
+        scr.fill((0, 0, 0))  # Залив фона чёрным (если PNG фон имеет прозрачные элементы)
+        scr.blit(bg, (0, 0))    # Отрисовка фона
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    game_is_paused = not game_is_paused
+                    game_is_paused = not game_is_paused  # Пауза
                 else:
-                    if not game_is_paused and is_playing and len(clickable_circles) > 0:
+                    if not game_is_paused and is_playing and len(clickable_circles) > 0:  # Если игра запущена
+                        # Проверка на клик (мыши):
                         a = click_circle(pygame.mouse.get_pos(), clickable_circles, circles_game, elapsed_time)
                         circles_game = a[0]
-                        if a[1]:
+                        if a[1]:  # Если клик попал:
                             a[2]['Click_time'] = elapsed_time
                             a[2]['Ring'] = 0
                             hit_circles.append(a[2])
                             hit_counter += 1
-                        else:
+                        else:  # Если клик не попал:
                             a[2]['Click_time'] = elapsed_time
                             a[2]['Ring'] = 0
                             missed_circles.append(a[2])
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if not game_is_paused and start_btn.checkforinput(event.pos) and not is_playing:
+                if not game_is_paused and start_btn.checkforinput(event.pos) and not is_playing:  # Начать игру
                     game_start_time = time.time() - game_start_time
                     is_playing = True
                     total_duration = load_game_audio(audio_path)
                 elif not game_is_paused and is_playing and len(clickable_circles) > 0:
+                    # Проверка на клик (клавиши):
                     a = click_circle(event.pos, clickable_circles, circles_game, elapsed_time)
                     circles_game = a[0]
-                    if a[1]:
+                    if a[1]:  # Если клик попал:
                         a[2]['Click_time'] = elapsed_time
                         a[2]['Ring'] = 0
                         hit_circles.append(a[2])
                         hit_counter += 1
-                    else:
+                    else:  # Если клик не попал:
                         a[2]['Click_time'] = elapsed_time
                         a[2]['Ring'] = 0
                         missed_circles.append(a[2])
-                elif game_is_paused and menu_btn.checkforinput(event.pos):
+                elif game_is_paused and menu_btn.checkforinput(event.pos):  # Выход в меню
                     pygame.mixer.music.stop()
                     menu(scr)
             elif event.type == pygame.MOUSEMOTION:
+                # Подсветка кнопок
                 menu_btn.hover(event.pos)
                 start_btn.hover(event.pos)
+
+        """Высчитывание отображаемых кружков"""
 
         a = timer(elapsed_time, circles_game, mode=0)
         clickable_circles = a[0]
         for e in a[1]:
             missed_circles.append(e)
         circles_game = a[2]
+
+        """Отрисовка кружков и крестиков"""
+
         draw(clickable_circles, scr)
         missed_circles = draw_x(elapsed_time, missed_circles, x_mark, scr)
         hit_circles = draw_check(elapsed_time, hit_circles, scr)
+
+        """Отсчет времени"""
 
         if is_playing:
             elapsed_time = time.time() - game_start_time
@@ -202,9 +233,13 @@ def game(scr, circles_game, audio_path, image_path):
                 elapsed_time = total_duration
                 game_is_paused = True
 
+        """Состояние перед запском"""
+
         if not is_playing and not game_is_paused:
             pause_menu(scr, current_size, menu_bg)
             start_btn.update()
+
+        """Состояние паузы"""
 
         if game_is_paused:
             pause_menu(scr, current_size, menu_bg)
@@ -216,10 +251,16 @@ def game(scr, circles_game, audio_path, image_path):
 
 def editor(scr, audio_file, bg_path, directory, existing_level=None):
     global current_size
+
+    """Загрузка данных существующего уровня"""
+
     if existing_level is None:
         circles = []
     else:
         circles = existing_level
+
+    """Инициализация переменных"""
+
     bg = pygame.image.load(bg_path)
     bg = pygame.transform.scale(bg, (current_size[0], current_size[1]))
     total_duration, temp, dur_slow = load_audio(audio_file)
@@ -244,6 +285,8 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
     editor_is_paused = False
     running = True
 
+    """Инициализация ассетов и кнопок"""
+
     long_button = pygame.image.load('image/long_button.png')
     long_button = pygame.transform.scale(long_button, (300, 75))
     short_button = pygame.image.load('image/short_button.png')
@@ -266,40 +309,46 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
                         timeline_y - border_radius + timeline_height // 2, scr)
     preptime_btn = Button(str(cur_preptime) + 's', short_button, button_indent,
                           timeline_y - border_radius + timeline_height // 2, scr)
+
+    """Главный цикл"""
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE:  # Пауза/плей
                     pp = play_pause(is_playing, paused_time, start_time, playback_speed)
                     is_playing, paused_time, start_time = pp[0], pp[1], pp[2]
-                elif event.key == pygame.K_ESCAPE:
+                elif event.key == pygame.K_ESCAPE:   # Пауза (меню)
                     editor_is_paused = not editor_is_paused
                 else:
+                    # Если нажатие не было на кнопку то добавить кружок
                     circles = edit(circles, pygame.mouse.get_pos(), elapsed_time, cur_radius, cur_preptime, cur_color)
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    if editor_is_paused and save_btn.checkforinput(event.pos):
+                if event.button == 1:  # Нажатие на ЛКМ
+                    if editor_is_paused and save_btn.checkforinput(event.pos):  # Сохранить и выйти
                         close_editor(audio_file, temp)
                         save_level(circles, audio_file, bg_path, directory)
                         menu(scr)
-                    elif editor_is_paused and menu_btn.checkforinput(event.pos):
+                    elif editor_is_paused and menu_btn.checkforinput(event.pos):  # Выйти без сохранения
                         close_editor(audio_file, temp)
                         menu(scr)
-                    elif velocity_btn.checkforinput(event.pos):
+                    elif velocity_btn.checkforinput(event.pos):  # Настроить скорость воспроизведения
                         if playback_speed == 1:
                             alter_playback_speed(audio_file, temp, opt_playback_speed)
                             playback_speed = opt_playback_speed
                         else:
                             alter_playback_speed(audio_file, temp, 1)
                             playback_speed = 1
+                        # Остановить если играет (если не делать может сломать синхронность аудио и уровня)
                         if is_playing:
                             pp = play_pause(is_playing, paused_time, start_time, playback_speed)
                             is_playing, paused_time, start_time = pp[0], pp[1], pp[2]
                         velocity_btn.changetext(str(round(playback_speed, 1)) + 'x')
-                    elif color_btn.checkforinput(event.pos):
+                    elif color_btn.checkforinput(event.pos):  # Изменить цвет
                         cur_color = get_color(cur_color)
+                    # Выбрать время
                     elif timeline_y - 2 * border_radius <= event.pos[1] <= timeline_y + timeline_height:
                         edit_timeline = True
                         is_dragging = True
@@ -307,8 +356,10 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
                         mouse_x = event.pos[0]
                         selector_position = max(timeline_x, min(mouse_x, timeline_x + timeline_width - selector_width))
                     else:
+                        # Если не нажатие на кнопку - добавить кружок
                         circles = edit(circles, event.pos, elapsed_time, cur_radius, cur_preptime, cur_color)
-                elif event.button == 3:
+                elif event.button == 3:  # Нажатие на ПКМ
+                    # Удалить кружок
                     try:
                         del_id = del_circle(event.pos, cur_circles)
                         for i in range(len(circles)):
@@ -317,14 +368,14 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
                                 break
                     except NameError:
                         pass
-                elif event.button == 4:
+                elif event.button == 4:  # Колёсико вверх
                     if radius_btn.checkforinput(event.pos):
                         cur_radius += 1
                         radius_btn.changetext(str(cur_radius) + 'px')
                     elif preptime_btn.checkforinput(event.pos):
                         cur_preptime = round(cur_preptime + 0.1, 1)
                         preptime_btn.changetext(str(cur_preptime) + 's')
-                elif event.button == 5:
+                elif event.button == 5:  # Колёсико вниз
                     if radius_btn.checkforinput(event.pos) and cur_radius > 1:
                         cur_radius -= 1
                         radius_btn.changetext(str(cur_radius) + 'px')
@@ -332,6 +383,7 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
                         cur_preptime = round(cur_preptime - 0.1, 1)
                         preptime_btn.changetext(str(cur_preptime) + 's')
             elif event.type == pygame.MOUSEBUTTONUP:
+                # Двигать таймлайн нажатием
                 if edit_timeline is True:
                     edit_timeline = False
                     is_dragging = False
@@ -339,23 +391,34 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
                     paused_time = (selector_position - timeline_x) / (timeline_width - selector_width) * total_duration
                     elapsed_time = (selector_position - timeline_x) / (timeline_width - selector_width) * total_duration
             elif event.type == pygame.MOUSEMOTION:
+                # Двигать таймлайн зажатием
                 if is_dragging:
                     mouse_x, _ = event.pos
                     selector_position = max(timeline_x, min(mouse_x, timeline_x + timeline_width - selector_width))
+                # Подсветка кнопок
                 save_btn.hover(event.pos)
                 menu_btn.hover(event.pos)
                 velocity_btn.hover(event.pos)
-        scr.fill((0, 0, 0))
-        scr.blit(bg, (0, 0))
+
+        scr.fill((0, 0, 0))  # Залить фон чёрным (для PNG элементов)
+        scr.blit(bg, (0, 0))   # Отрсиовка фона
+
+        """Отсчёт времени"""
+
         if is_playing:
             elapsed_time = paused_time + (time.time() - start_time - paused_time) / playback_speed
             if elapsed_time > total_duration:
                 elapsed_time = total_duration
                 is_playing = False
             selector_position = timeline_x + (elapsed_time / total_duration) * (timeline_width - selector_width)
+
+        """Вычисление и отрисовка отображаемых кружков"""
+
         cur_circles = timer(elapsed_time, circles, mode=1)
         draw(cur_circles, screen)
         draw_timeline(selector_position, elapsed_time, total_duration, screen, current_size)
+
+        """Отрисовка и подсветка GUI элементов"""
 
         radius_btn.hover(pygame.mouse.get_pos())
         preptime_btn.hover(pygame.mouse.get_pos())
@@ -367,6 +430,8 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
                                      timeline_y - border_radius + timeline_height // 2),
                     timeline_height + border_radius * 2)
 
+        """Состояние паузы (меню)"""
+
         if editor_is_paused:
             pause_menu(scr, current_size, menu_bg)
             save_btn.update()
@@ -374,6 +439,8 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
         pygame.display.flip()
     pygame.quit()
 
+
+"""Запуск приложения"""
 
 if __name__ == '__main__':
     pygame.init()
