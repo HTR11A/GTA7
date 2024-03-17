@@ -31,6 +31,7 @@ def menu(scr):
     set_audio_btn = Button('Выбрать аудио', long_button, screen_w // 2, 5 / 10 * screen_h, scr)
     set_image_btn = Button('Выбрать фон', long_button, screen_w // 2, 6 / 10 * screen_h, scr)
     create_level_btn = Button('Создать', long_button, screen_w // 2, 7 / 10 * screen_h, scr)
+    edit_existing_level_btn = Button('Править выбранный', long_button, screen_w // 2, 3 / 10 * screen_h, scr)
     editor_audio_path, editor_image_path = '', ''
     levels = listdir('levels')
     level_selector = 0
@@ -57,6 +58,10 @@ def menu(scr):
                         editor_audio_path != '' and editor_image_path != '' and name_input.get_text() != '':
                     create_level_btn.changetext('Loading')
                     editor(scr, editor_audio_path, editor_image_path, 'levels/' + name_input.get_text())
+                if edit_menu_on and edit_existing_level_btn.checkforinput(event.pos):
+                    edit_existing_level_btn.changetext('Loading')
+                    loaded_data = get_level_files(levels, level_selector)
+                    editor(scr, loaded_data[1], loaded_data[2], 'levels/' + levels[level_selector], existing_level=loaded_data[0])
                 if resume_btn.checkforinput(event.pos) and not edit_menu_on:
                     game(scr, *get_level_files(levels, level_selector))
                 if editor_btn.checkforinput(event.pos) and not edit_menu_on:
@@ -81,6 +86,7 @@ def menu(scr):
                 prev_btn.hover(event.pos)
                 set_audio_btn.hover(event.pos)
                 set_image_btn.hover(event.pos)
+                edit_existing_level_btn.hover(event.pos)
                 if editor_audio_path != '' and editor_image_path != '' and name_input.get_text() != '':
                     create_level_btn.hover(event.pos)
             elif event.type == pygame.VIDEORESIZE:
@@ -102,6 +108,7 @@ def menu(scr):
             set_audio_btn.update()
             set_image_btn.update()
             create_level_btn.update()
+            edit_existing_level_btn.update()
         pygame.display.flip()
         pygame.display.update()
 
@@ -207,9 +214,12 @@ def game(scr, circles_game, audio_path, image_path):
     pygame.quit()
 
 
-def editor(scr, audio_file, bg_path, directory):
+def editor(scr, audio_file, bg_path, directory, existing_level=None):
     global current_size
-    circles = []
+    if existing_level is None:
+        circles = []
+    else:
+        circles = existing_level
     bg = pygame.image.load(bg_path)
     bg = pygame.transform.scale(bg, (current_size[0], current_size[1]))
     total_duration, temp, dur_slow = load_audio(audio_file)
