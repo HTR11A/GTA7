@@ -174,7 +174,8 @@ def game(scr, circles_game, audio_path, image_path):
                 else:
                     if not game_is_paused and is_playing and len(clickable_circles) > 0:  # Если игра запущена
                         # Проверка на клик (мыши):
-                        a = click_circle(pygame.mouse.get_pos(), clickable_circles, circles_game, elapsed_time)
+                        a = click_circle(pygame.mouse.get_pos(), clickable_circles, circles_game,
+                                         elapsed_time, current_size[0], current_size[1])
                         circles_game = a[0]
                         if a[1]:  # Если клик попал:
                             a[2]['Click_time'] = elapsed_time
@@ -192,7 +193,8 @@ def game(scr, circles_game, audio_path, image_path):
                     total_duration = load_game_audio(audio_path)
                 elif not game_is_paused and is_playing and len(clickable_circles) > 0:
                     # Проверка на клик (клавиши):
-                    a = click_circle(event.pos, clickable_circles, circles_game, elapsed_time)
+                    a = click_circle(event.pos, clickable_circles, circles_game, elapsed_time,
+                                     current_size[0], current_size[1])
                     circles_game = a[0]
                     if a[1]:  # Если клик попал:
                         a[2]['Click_time'] = elapsed_time
@@ -221,9 +223,9 @@ def game(scr, circles_game, audio_path, image_path):
 
         """Отрисовка кружков и крестиков"""
 
-        draw(clickable_circles, scr)
-        missed_circles = draw_x(elapsed_time, missed_circles, x_mark, scr)
-        hit_circles = draw_check(elapsed_time, hit_circles, scr)
+        draw(clickable_circles, scr, current_size[0], current_size[1])
+        missed_circles = draw_x(elapsed_time, missed_circles, x_mark, scr, current_size[0], current_size[1])
+        hit_circles = draw_check(elapsed_time, hit_circles, scr, current_size[0], current_size[1])
 
         """Отсчет времени"""
 
@@ -326,7 +328,8 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
                     editor_is_paused = not editor_is_paused
                 else:
                     # Если нажатие не было на кнопку то добавить кружок
-                    circles = edit(circles, pygame.mouse.get_pos(), elapsed_time, cur_radius, cur_preptime, cur_color)
+                    circles = edit(circles, pygame.mouse.get_pos(), elapsed_time, cur_radius, cur_preptime, cur_color,
+                                   current_size[0], current_size[1])
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Нажатие на ЛКМ
                     if editor_is_paused and save_btn.checkforinput(event.pos):  # Сохранить и выйти
@@ -359,11 +362,12 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
                         selector_position = max(timeline_x, min(mouse_x, timeline_x + timeline_width - selector_width))
                     else:
                         # Если не нажатие на кнопку - добавить кружок
-                        circles = edit(circles, event.pos, elapsed_time, cur_radius, cur_preptime, cur_color)
+                        circles = edit(circles, event.pos, elapsed_time, cur_radius, cur_preptime, cur_color,
+                                       current_size[0], current_size[1])
                 elif event.button == 3:  # Нажатие на ПКМ
                     # Удалить кружок
                     try:
-                        del_id = del_circle(event.pos, cur_circles)
+                        del_id = del_circle(event.pos, cur_circles, current_size[0], current_size[1])
                         for i in range(len(circles)):
                             if circles[i]['ID'] == del_id:
                                 del circles[i]
@@ -417,7 +421,7 @@ def editor(scr, audio_file, bg_path, directory, existing_level=None):
         """Вычисление и отрисовка отображаемых кружков"""
 
         cur_circles = timer(elapsed_time, circles, mode=1)
-        draw(cur_circles, screen)
+        draw(cur_circles, screen, current_size[0], current_size[1])
         draw_timeline(selector_position, elapsed_time, total_duration, screen, current_size)
 
         """Отрисовка и подсветка GUI элементов"""

@@ -1,12 +1,12 @@
 import pygame
 import librosa
-from editor import draw
+from editor import draw, decode_coords
 
 
-def click_circle(args, clickable_circles, circles, elapsed_time):
+def click_circle(args, clickable_circles, circles, elapsed_time, w, h):
     clickable_circles.sort(key=lambda x: x['Click_time'])
     x, y = args[0], args[1]
-    centre = clickable_circles[0]['X_pos']
+    centre = decode_coords(clickable_circles[0]['X_pos'], w, h)
     a, b = centre[0], centre[1]  #координаты центра круга
     r = clickable_circles[0]['Radius']
     if abs(a - x) ** 2 + abs(b - y) ** 2 <= r ** 2 and clickable_circles[0]['Click_time'] - 0.1 <= elapsed_time:
@@ -22,11 +22,12 @@ def click_circle(args, clickable_circles, circles, elapsed_time):
                 return circles, False, clickable_circles[0]
 
 
-def draw_x(elapsed_time, array, x_mark, scr):
+def draw_x(elapsed_time, array, x_mark, scr, w, h):
     array_copy = array.copy()
     for i in range(len(array)):
         if elapsed_time - array[i]['Click_time'] <= 1:
-            scr.blit(x_mark, (array[i]['X_pos'][0] - 25, array[i]['X_pos'][1] - 25))
+            scr.blit(x_mark, (decode_coords(array[i]['X_pos'], w, h)[0] - 25,
+                              decode_coords(array[i]['X_pos'], w, h)[1] - 25))
         else:
             for j in range(len(array_copy)):
                 if array_copy[j]['ID'] == array[i]['ID']:
@@ -35,7 +36,7 @@ def draw_x(elapsed_time, array, x_mark, scr):
     return array_copy
 
 
-def draw_check(elapsed_time, array, scr):
+def draw_check(elapsed_time, array, scr, w, h):
     array_copy = array.copy()
     for i in range(len(array)):
         if elapsed_time - array[i]['Click_time'] <= 1 and array[i]['Radius'] > 10:
@@ -45,7 +46,7 @@ def draw_check(elapsed_time, array, scr):
                 if array_copy[j]['ID'] == array[i]['ID']:
                     del array_copy[j]
                     break
-    draw(array, scr)
+    draw(array, scr, w, h)
     return array_copy
 
 

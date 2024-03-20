@@ -64,13 +64,14 @@ def timer(elapsed_time, array, mode=0):
     return output
 
 
-def edit(array, pos, click_time, radius, preptime, color):
+def edit(array, pos, click_time, radius, preptime, color, w, h):
+    pos = encode_coords(pos, w, h)
     array.append({'Color': color, 'X_pos': pos,
                   'Prep_start_time': preptime, 'Click_time': click_time, 'Radius': radius, 'ID': len(array)})
     return array
 
 
-def draw(array, screen):
+def draw(array, screen, w, h):
     for circle in array:
         edge_color = list(circle['Color'])
         if edge_color[0] > 200 and edge_color[1] > 200 and edge_color[2] > 200:
@@ -82,10 +83,10 @@ def draw(array, screen):
                     edge_color[i] += 55
                 else:
                     edge_color[i] = 255
-        pygame.draw.circle(screen, circle['Color'], circle['X_pos'],
+        pygame.draw.circle(screen, circle['Color'], decode_coords(circle['X_pos'], w, h),
                            circle['Radius'] + circle['Ring'] * circle['Radius'], width=int(circle['Radius'] / 5))
-        pygame.draw.circle(screen, circle['Color'], circle['X_pos'], circle['Radius'])
-        pygame.draw.circle(screen, edge_color, circle['X_pos'], circle['Radius'],
+        pygame.draw.circle(screen, circle['Color'], decode_coords(circle['X_pos'], w, h), circle['Radius'])
+        pygame.draw.circle(screen, edge_color, decode_coords(circle['X_pos'], w, h), circle['Radius'],
                            width=round(circle['Radius'] * 0.15))
 
 
@@ -156,10 +157,10 @@ def close_editor(inp, temp_path):
     os.remove(temp_path)
 
 
-def del_circle(args, cur_circles):
+def del_circle(args, cur_circles, w, h):
     x, y = args[0], args[1]
     for i in range(len(cur_circles)):
-        centre = cur_circles[i]['X_pos']
+        centre = decode_coords(cur_circles[i]['X_pos'], w, h)
         a, b = centre[0], centre[1]  # координаты центра круга
         r = cur_circles[i]['Radius']
         if r > 0 and abs(a - x) ** 2 + abs(b - y) ** 2 <= r ** 2:
@@ -197,3 +198,17 @@ def draw_swatch(color, screen, pos, size):
                                      int(size / 1.5)), border_radius=20)
     pygame.draw.rect(screen, (240, 240, 240), (int(pos[0] - size / 3), int(pos[1] - size / 3), int(size / 1.5),
                                                int(size / 1.5)), border_radius=20, width=int(size / 18))
+
+
+def encode_coords(pos, w, h):
+    pos = list(pos)
+    pos[0] /= w
+    pos[1] /= h
+    return pos
+
+
+def decode_coords(pos, w, h):
+    pos = list(pos)
+    pos[0] *= w
+    pos[1] *= h
+    return pos
